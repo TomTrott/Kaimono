@@ -16,10 +16,10 @@ export function Hero({ onShopNow, onExplore }: HeroProps) {
   ];
 
   return (
-    <section className="relative overflow-hidden bg-white">
+    <section className="relative overflow-hidden bg-gray-50">
       {/* Background gradient effects */}
       <div className="absolute inset-0">
-        <div className="absolute top-0 left-1/4 w-[600px] h-[500px] bg-orange-200/60 rounded-full blur-[120px]" />
+        <div className="absolute top-0 left-1/4 w-[600px] h-[500px] bg-[#EE9D34]/30 rounded-full blur-[120px]" />
         <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-red-200/50 rounded-full blur-[100px]" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] bg-amber-200/20 rounded-full blur-[120px]" />
       </div>
@@ -37,7 +37,7 @@ export function Hero({ onShopNow, onExplore }: HeroProps) {
         <div className="text-center max-w-3xl mx-auto">
           <h1 className="mt-8 text-4xl sm:text-5xl lg:text-7xl font-extrabold text-gray-900 tracking-tight leading-[1.1]">
             Les meilleures figurines
-            <span className="block bg-gradient-to-r from-orange-500 via-amber-500 to-red-600 bg-clip-text text-transparent">
+            <span className="block bg-gradient-to-r from-orange-500 via-[#EE9D34] to-orange-600 bg-clip-text text-transparent">
               Dragon Ball Z & Manga
             </span>
           </h1>
@@ -50,7 +50,7 @@ export function Hero({ onShopNow, onExplore }: HeroProps) {
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
             <button
               onClick={onShopNow}
-              className="group inline-flex items-center gap-2 px-8 py-3.5 rounded-full bg-gradient-to-r from-orange-500 to-red-600 text-white font-semibold text-base hover:shadow-lg hover:shadow-orange-500/30 hover:scale-[1.02] transition-all"
+              className="group inline-flex items-center gap-2 px-8 py-3.5 rounded-full bg-gradient-to-r from-orange-500 via-[#EE9D34] to-orange-600 text-white font-semibold text-base hover:shadow-lg hover:shadow-orange-500/30 hover:scale-[1.02] transition-all"
             >
               Découvrir le catalogue
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />

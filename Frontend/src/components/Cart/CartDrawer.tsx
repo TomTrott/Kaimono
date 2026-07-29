@@ -33,7 +33,7 @@ export function CartDrawer({ open, onClose, onCheckout }: CartDrawerProps) {
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <div className="flex items-center gap-2">
-            <ShoppingBag className="w-5 h-5 text-orange-500" />
+            <ShoppingBag className="w-5 h-5" style={{ color: '#EE9D34' }} />
             <h2 className="text-gray-900 font-bold text-lg">
               Panier {totalItems > 0 && `(${totalItems})`}
             </h2>
