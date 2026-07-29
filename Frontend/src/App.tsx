@@ -2,13 +2,13 @@ import { useEffect, useState, useCallback } from 'react';
 import { Loader2, Sparkles, SlidersHorizontal } from 'lucide-react';
 import { CartProvider, useCart } from '@/context/CartContext';
 import type { Product } from '@/types';
-import { Header } from '@/components/Header';
+import { Header } from '@/components/Layout/Header';
 import { Hero } from '@/components/Hero';
-import { ProductCard } from '@/components/ProductCard';
-import { ProductDetail } from '@/components/ProductDetail';
-import { CartDrawer } from '@/components/CartDrawer';
-import { Checkout } from '@/components/Checkout';
-import { Footer } from '@/components/Footer';
+import { ProductCard } from '@/components/Cart/ProductCard';
+import { ProductDetail } from '@/components/Product/ProductDetail';
+import { CartDrawer } from '@/components/Cart/CartDrawer';
+import { Checkout } from '@/components/Checkout/Checkout';
+import { Footer } from '@/components/Layout/Footer';
 
 type View = 'home' | 'product' | 'checkout';
 
