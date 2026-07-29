@@ -1,7 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Loader2, Sparkles, SlidersHorizontal } from 'lucide-react';
 import { CartProvider, useCart } from '@/context/CartContext';
-import { supabase } from '@/lib/supabase';
 import type { Product } from '@/types';
 import { Header } from '@/components/Header';
 import { Hero } from '@/components/Hero';
@@ -25,6 +24,27 @@ const SORT_OPTIONS = [
 
 type SortValue = (typeof SORT_OPTIONS)[number]['value'];
 
+// Fonction pour parser le hash de l'URL
+const parseHashParams = (): { category?: string; sort?: SortValue; search?: string } => {
+  const hash = window.location.hash.substring(1); // Enlève le #
+  const params = new URLSearchParams(hash);
+  return {
+    category: params.get('category') || undefined,
+    sort: params.get('sort') as SortValue | undefined,
+    search: params.get('search') || undefined,
+  };
+};
+
+// Fonction pour mettre à jour le hash de l'URL
+const updateHashParams = (category: string, sort: SortValue, search: string) => {
+  const params = new URLSearchParams();
+  if (category !== 'Tous') params.set('category', category);
+  if (sort !== 'featured') params.set('sort', sort);
+  if (search.trim()) params.set('search', search);
+  const newHash = params.toString();
+  window.location.hash = newHash;
+};
+
 function StoreApp() {
   const { addToCart } = useCart();
   const [view, setView] = useState<View>('home');
@@ -38,23 +58,26 @@ function StoreApp() {
   const [sortBy, setSortBy] = useState<SortValue>('featured');
   const [toast, setToast] = useState<string | null>(null);
 
+  // Charger les filtres depuis l'URL au montage
   useEffect(() => {
+    const { category, sort, search } = parseHashParams();
+    if (category) setActiveCategory(category);
+    if (sort) setSortBy(sort);
+    if (search) setSearchQuery(search);
     fetchProducts();
   }, []);
+
+  // Mettre à jour l'URL quand un filtre change
+  useEffect(() => {
+    updateHashParams(activeCategory, sortBy, searchQuery);
+  }, [activeCategory, sortBy, searchQuery]);
 
   const fetchProducts = async () => {
     setLoading(true);
     setError(null);
-    const { data, error } = await supabase
-      .from('products')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      setError('Impossible de charger les produits. Veuillez réessayer.');
-    } else {
-      setProducts(data as Product[]);
-    }
+    // TODO: Remplacer par ta propre logique de récupération des produits
+    const mockProducts: Product[] = [];
+    setProducts(mockProducts);
     setLoading(false);
   };
 
@@ -261,7 +284,7 @@ function StoreApp() {
                   <button
                     key={cat}
                     onClick={() => setActiveCategory(cat)}
-                    className={`px-4 py-2 text-sm font-medium rounded-full transition-all ${
+                    className={`px-4 py-2 text-sm font-medium rounded-full transition-all $
                       activeCategory === cat
                         ? 'bg-orange-500 text-white'
                         : 'bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white hover:border-zinc-700'

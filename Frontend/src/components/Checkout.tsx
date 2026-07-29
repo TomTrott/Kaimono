@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { ArrowLeft, Check, Loader2, ShoppingBag } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
-import { supabase } from '@/lib/supabase';
 import type { OrderInput, OrderItemInput } from '@/types';
 
 interface CheckoutProps {
@@ -39,40 +38,21 @@ export function Checkout({ onBack, onOrderComplete }: CheckoutProps) {
     setError(null);
 
     try {
-      const orderInput: OrderInput = {
-        customer_name: form.customer_name,
-        customer_email: form.customer_email,
-        customer_phone: form.customer_phone || null,
-        shipping_address: form.shipping_address,
-        city: form.city,
-        postal_code: form.postal_code,
-        country: form.country,
+      // TODO: Remplacer par ta propre logique de création de commande
+      // Exemple : appel à une API personnalisée, localStorage, etc.
+      console.log('Commande à créer :', {
+        ...form,
         total,
-      };
+        items: items.map((item) => ({
+          product_id: item.product.id,
+          product_name: item.product.name,
+          product_image_url: item.product.image_url,
+          unit_price: item.product.price,
+          quantity: item.quantity,
+        })),
+      });
 
-      const { data: order, error: orderError } = await supabase
-        .from('orders')
-        .insert(orderInput)
-        .select()
-        .single();
-
-      if (orderError) throw orderError;
-
-      const orderItems: OrderItemInput[] = items.map((item) => ({
-        order_id: order.id,
-        product_id: item.product.id,
-        product_name: item.product.name,
-        product_image_url: item.product.image_url,
-        unit_price: item.product.price,
-        quantity: item.quantity,
-      }));
-
-      const { error: itemsError } = await supabase
-        .from('order_items')
-        .insert(orderItems);
-
-      if (itemsError) throw itemsError;
-
+      // Simulation de succès
       clearCart();
       setSuccess(true);
       setTimeout(() => {
