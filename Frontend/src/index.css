@@ -56,6 +56,24 @@ body {
   animation-name: slide-in-from-bottom;
 }
 
+/* Animation pour le slider en boucle */
+@keyframes scroll-loop {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@layer utilities {
+  .animate-scroll-loop {
+    animation: scroll-loop 20s linear infinite;
+    display: flex;
+    width: 200%; /* Double la largeur pour éviter les coupures */
+  }
+}
+
 /* Line clamp */
 .line-clamp-2 {
   display: -webkit-box;
