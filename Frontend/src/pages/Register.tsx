@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Mail, Lock, User, Loader2, UserPlus, Sparkles } from 'lucide-react';
+import axios from 'axios';
 import { useAuth } from '@/context/AuthContext';
 
 interface FormErrors {
@@ -58,15 +59,16 @@ export default function Register() {
     try {
       await register(prenom, nom, email, password);
       navigate('/profile', { replace: true });
-    } catch {
-      setErrors({ global: "Une erreur est survenue lors de l'inscription." });
+    } catch (err) {
+      const apiMessage = axios.isAxiosError(err) ? err.response?.data?.error : undefined;
+      setErrors({ global: apiMessage || "Une erreur est survenue lors de l'inscription." });
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <div className="relative overflow-hidden min-h-[calc(80vh-4rem)] bg-gray-50 flex items-center">
+    <div className="relative overflow-hidden min-h-[calc(80vh-4rem)] flex items-center">
       {/* Décor d'arrière-plan */}
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-[#EE9D34]/10 blur-3xl" />
@@ -76,6 +78,7 @@ export default function Register() {
       <div className="max-w-md w-full mx-auto px-4 sm:px-6 py-16">
         <div className="text-center mb-8">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EE9D34]/10 text-[#EE9D34] text-xs font-semibold tracking-wide uppercase mb-4">
+            <Sparkles className="w-3.5 h-3.5" />
             Rejoignez-nous
           </span>
           <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Créer un compte</h1>
@@ -204,7 +207,7 @@ export default function Register() {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-full bg-black text-white text-sm font-medium hover:bg-gray-900 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+              className="w-full inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-full bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
             >
               {submitting ? (
                 <>

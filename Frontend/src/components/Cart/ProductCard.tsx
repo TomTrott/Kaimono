@@ -1,4 +1,4 @@
-import { Star, Plus, Sparkles, TrendingUp } from 'lucide-react';
+import { Star, Plus } from 'lucide-react';
 import type { Product } from '@/types';
 
 interface ProductCardProps {
@@ -12,50 +12,25 @@ function formatPrice(price: number): string {
 }
 
 export function ProductCard({ product, onProductClick, onQuickAdd }: ProductCardProps) {
-  const discount = product.original_price
-    ? Math.round((1 - product.price / product.original_price) * 100)
-    : 0;
-
   return (
     <div
       onClick={() => onProductClick(product)}
-      className="group relative bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-800 hover:border-zinc-700 transition-all cursor-pointer hover:shadow-xl hover:shadow-black/40"
+      className="group relative bg-white rounded-2xl overflow-hidden border border-gray-200 hover:border-gray-300 hover:shadow-md transition-all cursor-pointer"
     >
-      {/* Badges */}
-      <div className="absolute top-3 left-3 z-10 flex flex-col gap-1.5">
-        {product.is_new && (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/90 text-white text-[10px] font-bold uppercase tracking-wide backdrop-blur-sm">
-            <Sparkles className="w-3 h-3" />
-            Nouveau
-          </span>
-        )}
-        {discount > 0 && (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-red-500/90 text-white text-[10px] font-bold uppercase tracking-wide backdrop-blur-sm">
-            -{discount}%
-          </span>
-        )}
-        {product.is_featured && (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-orange-500/90 text-white text-[10px] font-bold uppercase tracking-wide backdrop-blur-sm">
-            <TrendingUp className="w-3 h-3" />
-            Top vente
-          </span>
-        )}
-      </div>
-
-      {/* Quick add */}
+      {/* Bouton "Ajouter au panier" */}
       <button
         onClick={(e) => {
           e.stopPropagation();
           onQuickAdd(product);
         }}
-        className="absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-zinc-950/80 border border-zinc-700 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-orange-500 hover:border-orange-500 transition-all backdrop-blur-sm"
+        className="absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-white/80 border border-gray-300 text-gray-700 flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-[#EE9D34] hover:text-white hover:border-[#EE9D34] transition-all backdrop-blur-sm"
         aria-label="Ajouter au panier"
       >
         <Plus className="w-4 h-4" />
       </button>
 
-      {/* Image */}
-      <div className="relative aspect-[4/5] overflow-hidden bg-zinc-800">
+      {/* Image du produit */}
+      <div className="relative aspect-[4/5] overflow-hidden bg-gray-50">
         {product.image_url ? (
           <img
             src={product.image_url}
@@ -64,64 +39,57 @@ export function ProductCard({ product, onProductClick, onQuickAdd }: ProductCard
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-zinc-600">
-            <Sparkles className="w-12 h-12" />
+          <div className="w-full h-full flex items-center justify-center text-gray-400">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="w-12 h-12"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={1}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
+              />
+            </svg>
           </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-transparent to-transparent opacity-60" />
       </div>
 
-      {/* Info */}
+      {/* Informations du produit */}
       <div className="p-4">
         <div className="flex items-center gap-1.5 mb-1.5">
-          <span className="text-[10px] font-semibold text-orange-400 uppercase tracking-wide">
-            {product.category}
-          </span>
           {product.series && (
             <>
-              <span className="text-zinc-600 text-[10px]">•</span>
-              <span className="text-[10px] text-zinc-500">{product.series}</span>
+              <span className="text-gray-400 text-[10px]">•</span>
+              <span className="text-[10px] text-gray-500">{product.series}</span>
             </>
           )}
         </div>
 
-        <h3 className="text-white font-semibold text-sm leading-snug mb-2 line-clamp-2 group-hover:text-orange-400 transition-colors">
+        <h3 className="text-gray-900 font-semibold text-sm leading-snug mb-2 line-clamp-2 group-hover:text-[#EE9D34] transition-colors">
           {product.name}
         </h3>
-
-        <div className="flex items-center gap-1 mb-3">
-          <div className="flex items-center gap-0.5">
-            {[1, 2, 3, 4, 5].map((n) => (
-              <Star
-                key={n}
-                className={`w-3 h-3 ${
-                  n <= Math.round(product.rating)
-                    ? 'fill-amber-400 text-amber-400'
-                    : 'text-zinc-700'
-                }`}
-              />
-            ))}
-          </div>
-          <span className="text-[11px] text-zinc-500">({product.reviews_count})</span>
-        </div>
 
         <div className="flex items-end justify-between">
           <div>
             {product.original_price && (
-              <span className="block text-xs text-zinc-500 line-through">
+              <span className="block text-xs text-gray-500 line-through">
                 {formatPrice(product.original_price)}
               </span>
             )}
-            <span className="text-lg font-bold text-white">
+            <span className="text-lg font-bold text-gray-900">
               {formatPrice(product.price)}
             </span>
           </div>
           {product.stock > 0 ? (
-            <span className="text-[10px] font-medium text-emerald-400">
+            <span className="text-[10px] font-medium text-black">
               En stock
             </span>
           ) : (
-            <span className="text-[10px] font-medium text-red-400">
+            <span className="text-[10px] font-medium text-black">
               Rupture
             </span>
           )}

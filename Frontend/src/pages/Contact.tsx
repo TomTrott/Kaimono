@@ -160,7 +160,8 @@ export default function Contact() {
                   </div>
                   <div>
                     <p className="text-sm text-gray-400">Email</p>
-                    <p className="text-sm font-medium">contact@boutique.fr</p>
+                    <p className="text-sm font-medium">contact-kaimono-store@gmail.com
+</p>
                   </div>
                 </div>
 

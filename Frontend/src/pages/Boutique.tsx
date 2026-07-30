@@ -4,6 +4,7 @@ import { useCart } from '@/context/CartContext';
 import type { Product } from '@/types';
 import { ProductCard } from '@/components/Cart/ProductCard';
 import { ProductDetail } from '@/components/Product/ProductDetail';
+import api from '@/services/api';
 
 // Catégories de produits
 const CATEGORIES = ['Tous', 'Dragon Ball Z', 'Naruto', 'One Piece'];
@@ -13,8 +14,8 @@ const MANUFACTURERS = ['Tous', 'Banpresto', 'Bandai', 'Funko', 'MegaHouse', 'Thr
 
 // Options de tri
 const SORT_OPTIONS = [
-  { value: 'price-asc', label: 'Prix croissant' },
   { value: 'price-desc', label: 'Prix décroissant' },
+    { value: 'price-asc', label: 'Prix croissant' },
   { value: 'rating', label: 'Mieux notés' },
   { value: 'new', label: 'Nouveautés' },
 ] as const;
@@ -33,18 +34,31 @@ export default function Boutique() {
   const [sortBy, setSortBy] = useState<SortValue>('featured');
   const [toast, setToast] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchProducts();
-  }, []);
-
+  // Récupérer les produits depuis le backend
   const fetchProducts = async () => {
     setLoading(true);
     setError(null);
-    // TODO: Remplacer par ta propre logique de récupération des produits
-    const mockProducts: Product[] = [];
-    setProducts(mockProducts);
-    setLoading(false);
+    try {
+      const params: Record<string, string> = {};
+      if (activeCategory !== 'Tous') params.category = activeCategory;
+      if (activeManufacturer !== 'Tous') params.manufacturer = activeManufacturer;
+      if (searchQuery.trim()) params.search = searchQuery;
+      if (sortBy) params.sort = sortBy;
+
+      const res = await api.get('/products/list.php', { params });
+      setProducts(res.data.products);
+    } catch (err) {
+      setError('Impossible de charger les produits. Veuillez réessayer.');
+      console.error('Erreur lors de la récupération des produits :', err);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  // Charger les produits au montage et lors des changements de filtres
+  useEffect(() => {
+    fetchProducts();
+  }, [activeCategory, activeManufacturer, searchQuery, sortBy]);
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -61,63 +75,11 @@ export default function Boutique() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const filteredProducts = useCallback(() => {
-    let result = products;
-
-    // Filtre par catégorie
-    if (activeCategory !== 'Tous') {
-      result = result.filter((p) => p.category === activeCategory);
-    }
-
-    // Filtre par fabricant
-    if (activeManufacturer !== 'Tous') {
-      result = result.filter((p) => p.manufacturer === activeManufacturer);
-    }
-
-    // Filtre par recherche
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(
-        (p) =>
-          p.name.toLowerCase().includes(q) ||
-          p.character?.toLowerCase().includes(q) ||
-          p.series?.toLowerCase().includes(q) ||
-          p.category.toLowerCase().includes(q) ||
-          p.manufacturer?.toLowerCase().includes(q),
-      );
-    }
-
-    // Tri des produits
-    const sorted = [...result];
-    switch (sortBy) {
-      case 'price-asc':
-        sorted.sort((a, b) => a.price - b.price);
-        break;
-      case 'price-desc':
-        sorted.sort((a, b) => b.price - a.price);
-        break;
-      case 'rating':
-        sorted.sort((a, b) => b.rating - a.rating);
-        break;
-      case 'new':
-        sorted.sort((a, b) => Number(b.is_new) - Number(a.is_new));
-        break;
-      case 'featured':
-      default:
-        sorted.sort(
-          (a, b) =>
-            Number(b.is_featured) - Number(a.is_featured) ||
-            b.rating - a.rating,
-        );
-    }
-
-    return sorted;
-  }, [products, activeCategory, activeManufacturer, searchQuery, sortBy]);
-
-  const displayedProducts = filteredProducts();
+  // Filtrer et trier les produits côté frontend (optionnel, car le backend le fait déjà)
+  const displayedProducts = products;
 
   return (
-    <>
+    <div className="min-h-[calc(80vh-4rem)] bg-gray-50">
       {selectedProduct ? (
         <ProductDetail
           product={selectedProduct}
@@ -140,7 +102,7 @@ export default function Boutique() {
             </div>
           </div>
 
-          {/* Filtres + recherche : tout sur une seule ligne en desktop, empilé en mobile */}
+          {/* Filtres + recherche */}
           <div className="flex flex-col lg:flex-row lg:items-center gap-3 mb-8">
             {/* Recherche */}
             <div className="relative w-full lg:max-w-xs lg:order-1">
@@ -204,7 +166,7 @@ export default function Boutique() {
             </div>
           </div>
 
-          {/* Products grid */}
+          {/* Grille des produits */}
           {loading ? (
             <div className="flex items-center justify-center py-20">
               <Loader2 className="w-8 h-8 animate-spin text-[#EE9D34]" />
@@ -245,6 +207,6 @@ export default function Boutique() {
           {toast}
         </div>
       )}
-    </>
+    </div>
   );
 }
