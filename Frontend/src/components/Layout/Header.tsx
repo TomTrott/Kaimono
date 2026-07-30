@@ -22,7 +22,6 @@ export function Header({
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  // Liens de navigation
   const navLinks = [
     { label: 'Accueil', path: '/' },
     { label: 'Boutique', path: '/boutique' },
@@ -81,7 +80,7 @@ export function Header({
             ))}
             <button
               onClick={onCartClick}
-              className="relative p-2 rounded-lg text-gray-600 hover:text-[#EE9D34] "
+              className="relative p-2 rounded-lg text-gray-600 hover:text-[#EE9D34]"
               aria-label="Panier"
             >
               <ShoppingBag className="w-5 h-5" />
@@ -93,7 +92,7 @@ export function Header({
             </button>
             <button
               onClick={handleProfileClick}
-              className="p-2 rounded-lg text-gray-600 hover:text-[#EE9D34] "
+              className="p-2 rounded-lg text-gray-600 hover:text-[#EE9D34]"
               aria-label="Profil"
             >
               <User className="w-5 h-5" />
@@ -104,7 +103,7 @@ export function Header({
           <div className="flex items-center gap-2 shrink-0 lg:hidden">
             <button
               onClick={onCartClick}
-              className="relative p-2 rounded-lg text-gray-600 hover:text-[#EE9D34] "
+              className="relative p-2 rounded-lg text-gray-600 hover:text-[#EE9D34]"
               aria-label="Panier"
             >
               <ShoppingBag className="w-5 h-5" />
@@ -116,7 +115,7 @@ export function Header({
             </button>
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="p-2 rounded-lg text-gray-600 hover:text-[#EE9D34] "
+              className="p-2 rounded-lg text-gray-600 hover:text-[#EE9D34]"
               aria-label="Menu"
             >
               {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}

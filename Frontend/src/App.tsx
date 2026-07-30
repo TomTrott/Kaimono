@@ -10,6 +10,7 @@ import Contact from '@/pages/Contact';
 import Profile from '@/pages/Profile';
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
+import { Checkout } from '@/components/Checkout/Checkout';
 import { useState } from 'react';
 
 export default function App() {
@@ -22,7 +23,7 @@ export default function App() {
           <div className="min-h-screen bg-white flex flex-col">
             <Header
               onCartClick={() => setCartOpen(true)}
-              onLogoClick={() => window.location.href = '/'}
+              onLogoClick={() => (window.location.href = '/')}
             />
             <main className="flex-1">
               <Routes>
@@ -32,13 +33,22 @@ export default function App() {
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
+                <Route
+                  path="/checkout"
+                  element={
+                    <Checkout
+                      onBack={() => (window.location.href = '/boutique')}
+                      onOrderComplete={() => (window.location.href = '/')}
+                    />
+                  }
+                />
               </Routes>
             </main>
             <Footer />
             <CartDrawer
               open={cartOpen}
               onClose={() => setCartOpen(false)}
-              onCheckout={() => window.location.href = '/checkout'}
+              onCheckout={() => (window.location.href = '/checkout')}
             />
           </div>
         </Router>

@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { Loader2, SlidersHorizontal, Sparkles, ChevronDown, Search } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import type { Product } from '@/types';
-import { ProductCard } from '@/components/Cart/ProductCard';
+import { ProductCard } from '@/components/Product/ProductCard';
 import { ProductDetail } from '@/components/Product/ProductDetail';
 import api from '@/services/api';
 

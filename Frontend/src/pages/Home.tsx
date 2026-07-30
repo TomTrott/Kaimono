@@ -3,7 +3,7 @@ import { Loader2, Sparkles } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import type { Product } from '@/types';
 import { Hero } from '@/components/Hero';
-import { ProductCard } from '@/components/Cart/ProductCard';
+import { ProductCard } from '@/components/Product/ProductCard';
 import { ProductDetail } from '@/components/Product/ProductDetail';
 import api from '@/services/api';
 

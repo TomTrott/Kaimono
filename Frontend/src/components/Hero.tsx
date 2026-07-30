@@ -6,15 +6,6 @@ interface HeroProps {
 }
 
 export function Hero({ onShopNow, onExplore }: HeroProps) {
-  const productImages = [
-    "https://via.placeholder.com/300x200/FF5733/FFFFFF?text=Product+1",
-    "https://via.placeholder.com/300x200/33FF57/FFFFFF?text=Product+2",
-    "https://via.placeholder.com/300x200/3357FF/FFFFFF?text=Product+3",
-    "https://via.placeholder.com/300x200/F1C40F/FFFFFF?text=Product+4",
-    "https://via.placeholder.com/300x200/9C27B0/FFFFFF?text=Product+5",
-    "https://via.placeholder.com/300x200/FF9800/FFFFFF?text=Product+6",
-  ];
-
   return (
     <section className="relative overflow-hidden bg-gray-50">
       {/* Background gradient effects */}
@@ -64,40 +55,6 @@ export function Hero({ onShopNow, onExplore }: HeroProps) {
           </div>
         </div>
       </div>
-
-      {/* Bandeau défilant de produits */}
-<div className="relative w-full h-32 overflow-hidden bg-gray-50 border-t border-gray-200">
-  <div className="absolute inset-0 flex items-center justify-center">
-    <div className="flex space-x-6 animate-scroll-loop">
-      {/* Première série d'images */}
-      {productImages.map((src, index) => (
-        <div
-          key={index}
-          className="flex-shrink-0 w-40 h-24 rounded-lg overflow-hidden shadow-md"
-        >
-          <img
-            src={src}
-            alt={`Produit ${index + 1}`}
-            className="w-full h-full object-cover"
-          />
-        </div>
-      ))}
-      {/* Deuxième série d'images (identique) pour la boucle */}
-      {productImages.map((src, index) => (
-        <div
-          key={`loop-${index}`}
-          className="flex-shrink-0 w-40 h-24 rounded-lg overflow-hidden shadow-md"
-        >
-          <img
-            src={src}
-            alt={`Produit ${index + 1}`}
-            className="w-full h-full object-cover"
-          />
-        </div>
-      ))}
-    </div>
-  </div>
-</div>
     </section>
   );
 }

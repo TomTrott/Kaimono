@@ -1,33 +1,61 @@
-import { Star, Plus } from 'lucide-react';
+import { Plus, Check } from 'lucide-react';
 import type { Product } from '@/types';
+import { useState } from 'react';
+import { useCart } from '@/context/CartContext';
 
 interface ProductCardProps {
   product: Product;
   onProductClick: (product: Product) => void;
-  onQuickAdd: (product: Product) => void;
 }
 
 function formatPrice(price: number): string {
   return price.toFixed(2).replace('.', ',') + ' €';
 }
 
-export function ProductCard({ product, onProductClick, onQuickAdd }: ProductCardProps) {
+export function ProductCard({ product, onProductClick }: ProductCardProps) {
+  const { addToCart } = useCart();
+  const [added, setAdded] = useState(false);
+  const [adding, setAdding] = useState(false);
+
+  const handleQuickAdd = async () => {
+    if (adding || product.stock === 0) return;
+    setAdding(true);
+    try {
+      await addToCart(product.id, 1);
+      setAdded(true);
+      setTimeout(() => setAdded(false), 2000);
+    } finally {
+      setAdding(false);
+    }
+  };
+
   return (
     <div
       onClick={() => onProductClick(product)}
       className="group relative bg-white rounded-2xl overflow-hidden border border-gray-200 hover:border-gray-300 hover:shadow-md transition-all cursor-pointer"
     >
-      {/* Bouton "Ajouter au panier" */}
+      {/* Bouton "Ajouter au panier" - Toujours visible sur mobile, au survol sur PC */}
       <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onQuickAdd(product);
-        }}
-        className="absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-white/80 border border-gray-300 text-gray-700 flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-[#EE9D34] hover:text-white hover:border-[#EE9D34] transition-all backdrop-blur-sm"
-        aria-label="Ajouter au panier"
-      >
-        <Plus className="w-4 h-4" />
-      </button>
+  onClick={(e) => {
+    e.stopPropagation();
+    handleQuickAdd();
+  }}
+  disabled={product.stock === 0 || adding}
+  className="absolute top-3 right-3 z-10 w-9 h-9 rounded-full
+    bg-[#EE9D34] text-white shadow-md
+    md:bg-white/80 md:border md:border-gray-300 md:text-gray-700
+    md:opacity-0 md:group-hover:opacity-100
+    hover:bg-[#EE9D34] hover:text-white hover:border-[#EE9D34]
+    flex items-center justify-center  {/* <-- Ajout de ces classes */}
+    transition-all backdrop-blur-sm disabled:opacity-50"
+  aria-label={added ? "Ajouté au panier" : "Ajouter au panier"}
+>
+  {added ? (
+    <Check className="w-4 h-4" />
+  ) : (
+    <Plus className="w-4 h-4" />
+  )}
+</button>
 
       {/* Image du produit */}
       <div className="relative aspect-[4/5] overflow-hidden bg-gray-50">
@@ -85,11 +113,11 @@ export function ProductCard({ product, onProductClick, onQuickAdd }: ProductCard
             </span>
           </div>
           {product.stock > 0 ? (
-            <span className="text-[10px] font-medium text-black">
+            <span className="text-[10px] font-medium text-green-600">
               En stock
             </span>
           ) : (
-            <span className="text-[10px] font-medium text-black">
+            <span className="text-[10px] font-medium text-red-500">
               Rupture
             </span>
           )}

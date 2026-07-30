@@ -11,6 +11,7 @@ interface AuthUser {
 
 interface AuthContextType {
   user: AuthUser | null;
+  token: string | null;
   isAuthenticated: boolean;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
@@ -23,26 +24,37 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
+    const storedToken = localStorage.getItem('token');
+    if (!storedToken) {
       setLoading(false);
       return;
     }
 
     api
       .get('/auth/me.php')
-      .then((res) => setUser(res.data.user))
-      .catch(() => localStorage.removeItem('token'))
+      .then((res) => {
+        setUser(res.data.user);
+        setToken(storedToken);
+      })
+      .catch(() => {
+        localStorage.removeItem('token');
+        setToken(null);
+        setUser(null);
+      })
       .finally(() => setLoading(false));
   }, []);
 
   const login = async (email: string, password: string) => {
     const res = await api.post('/auth/login.php', { email, password });
-    localStorage.setItem('token', res.data.token);
-    setUser(res.data.user);
+    const newToken = res.data.token;
+    const newUser = res.data.user;
+    localStorage.setItem('token', newToken);
+    setToken(newToken);
+    setUser(newUser);
   };
 
   const register = async (
@@ -57,13 +69,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email,
       password,
     });
-    localStorage.setItem('token', res.data.token);
-    setUser(res.data.user);
+    const newToken = res.data.token;
+    const newUser = res.data.user;
+    localStorage.setItem('token', newToken);
+    setToken(newToken);
+    setUser(newUser);
   };
 
   const logout = () => {
     api.post('/auth/logout.php').catch(() => {});
     localStorage.removeItem('token');
+    setToken(null);
     setUser(null);
   };
 
@@ -76,6 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider
       value={{
         user,
+        token,
         isAuthenticated: !!user,
         loading,
         login,

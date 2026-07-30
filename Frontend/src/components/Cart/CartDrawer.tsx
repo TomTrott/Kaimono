@@ -7,12 +7,13 @@ interface CartDrawerProps {
   onCheckout: () => void;
 }
 
-function formatPrice(price: number): string {
-  return price.toFixed(2).replace('.', ',') + ' €';
+function formatPrice(price: number | string): string {
+  const numericPrice = typeof price === 'string' ? parseFloat(price) : price;
+  return numericPrice.toFixed(2).replace('.', ',') + ' €';
 }
 
 export function CartDrawer({ open, onClose, onCheckout }: CartDrawerProps) {
-  const { items, updateQuantity, removeFromCart, subtotal, totalItems } = useCart();
+  const { items, subtotal, totalItems, updateQuantity, removeFromCart } = useCart();
 
   return (
     <>
@@ -69,14 +70,14 @@ export function CartDrawer({ open, onClose, onCheckout }: CartDrawerProps) {
             <div className="space-y-3">
               {items.map((item) => (
                 <div
-                  key={item.product.id}
+                  key={item.product_id}
                   className="flex gap-3 p-3 rounded-xl bg-gray-50 border border-gray-200"
                 >
                   <div className="w-16 h-20 rounded-lg overflow-hidden bg-gray-100 shrink-0">
-                    {item.product.image_url && (
+                    {item.image_url && (
                       <img
-                        src={item.product.image_url}
-                        alt={item.product.name}
+                        src={item.image_url}
+                        alt={item.name}
                         className="w-full h-full object-cover"
                       />
                     )}
@@ -84,20 +85,20 @@ export function CartDrawer({ open, onClose, onCheckout }: CartDrawerProps) {
 
                   <div className="flex-1 min-w-0">
                     <p className="text-xs text-orange-500 font-medium uppercase tracking-wide">
-                      {item.product.category}
+                      {item.category || "Figurine"}
                     </p>
                     <h4 className="text-sm font-semibold text-gray-900 line-clamp-2 mb-1">
-                      {item.product.name}
+                      {item.name}
                     </h4>
                     <p className="text-sm font-bold text-gray-900">
-                      {formatPrice(item.product.price)}
+                      {formatPrice(item.price)}
                     </p>
 
                     <div className="flex items-center justify-between mt-2">
                       <div className="flex items-center gap-2 bg-gray-100 rounded-full p-0.5">
                         <button
                           onClick={() =>
-                            updateQuantity(item.product.id, item.quantity - 1)
+                            updateQuantity(item.product_id, Math.max(1, item.quantity - 1))
                           }
                           className="w-7 h-7 rounded-full hover:bg-gray-200 text-gray-500 flex items-center justify-center transition-colors"
                           aria-label="Diminuer"
@@ -109,7 +110,7 @@ export function CartDrawer({ open, onClose, onCheckout }: CartDrawerProps) {
                         </span>
                         <button
                           onClick={() =>
-                            updateQuantity(item.product.id, item.quantity + 1)
+                            updateQuantity(item.product_id, Math.min(item.stock, item.quantity + 1))
                           }
                           className="w-7 h-7 rounded-full hover:bg-gray-200 text-gray-500 flex items-center justify-center transition-colors"
                           aria-label="Augmenter"
@@ -118,7 +119,7 @@ export function CartDrawer({ open, onClose, onCheckout }: CartDrawerProps) {
                         </button>
                       </div>
                       <button
-                        onClick={() => removeFromCart(item.product.id)}
+                        onClick={() => removeFromCart(item.product_id)}
                         className="p-1.5 rounded-lg text-gray-500 hover:text-red-500 hover:bg-gray-100 transition-colors"
                         aria-label="Supprimer"
                       >
