@@ -1,4 +1,5 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Loader2, SlidersHorizontal, Sparkles, ChevronDown, Search } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import type { Product } from '@/types';
@@ -14,8 +15,9 @@ const MANUFACTURERS = ['Tous', 'Banpresto', 'Bandai', 'Funko', 'MegaHouse', 'Thr
 
 // Options de tri
 const SORT_OPTIONS = [
+  { value: 'featured', label: 'Recommandés' },
   { value: 'price-desc', label: 'Prix décroissant' },
-    { value: 'price-asc', label: 'Prix croissant' },
+  { value: 'price-asc', label: 'Prix croissant' },
   { value: 'rating', label: 'Mieux notés' },
   { value: 'new', label: 'Nouveautés' },
 ] as const;
@@ -28,7 +30,20 @@ export default function Boutique() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
+
+  // Recherche synchronisée avec l'URL (?search=...) — partagée avec le Header
+  const [searchParams, setSearchParams] = useSearchParams();
+  const searchQuery = searchParams.get('search') ?? '';
+  const setSearchQuery = (value: string) => {
+    const next = new URLSearchParams(searchParams);
+    if (value) {
+      next.set('search', value);
+    } else {
+      next.delete('search');
+    }
+    setSearchParams(next, { replace: true });
+  };
+
   const [activeCategory, setActiveCategory] = useState('Tous');
   const [activeManufacturer, setActiveManufacturer] = useState('Tous');
   const [sortBy, setSortBy] = useState<SortValue>('featured');
@@ -58,6 +73,7 @@ export default function Boutique() {
   // Charger les produits au montage et lors des changements de filtres
   useEffect(() => {
     fetchProducts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeCategory, activeManufacturer, searchQuery, sortBy]);
 
   const showToast = (msg: string) => {
@@ -65,8 +81,8 @@ export default function Boutique() {
     setTimeout(() => setToast(null), 2500);
   };
 
-  const handleQuickAdd = (product: Product) => {
-    addToCart(product, 1);
+  const handleQuickAdd = async (product: Product) => {
+    await addToCart(product.id, 1);
     showToast(`${product.name} ajouté au panier`);
   };
 
@@ -75,7 +91,6 @@ export default function Boutique() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Filtrer et trier les produits côté frontend (optionnel, car le backend le fait déjà)
   const displayedProducts = products;
 
   return (
@@ -84,10 +99,6 @@ export default function Boutique() {
         <ProductDetail
           product={selectedProduct}
           onBack={() => setSelectedProduct(null)}
-          onAddToCart={(product, qty) => {
-            addToCart(product, qty);
-            showToast(`${product.name} ajouté au panier`);
-          }}
         />
       ) : (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

@@ -2,25 +2,36 @@ import { useState } from 'react';
 import { ShoppingBag, Search, Menu, X, User } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 
 interface HeaderProps {
   onCartClick: () => void;
-  searchQuery: string;
-  onSearchChange: (q: string) => void;
   onLogoClick: () => void;
 }
 
-export function Header({
-  onCartClick,
-  searchQuery,
-  onSearchChange,
-  onLogoClick,
-}: HeaderProps) {
+export function Header({ onCartClick, onLogoClick }: HeaderProps) {
   const { totalItems } = useCart();
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const searchQuery = searchParams.get('search') ?? '';
+
+  const handleSearchChange = (value: string) => {
+    if (location.pathname !== '/boutique') {
+      navigate(`/boutique?search=${encodeURIComponent(value)}`);
+      return;
+    }
+    const next = new URLSearchParams(searchParams);
+    if (value) {
+      next.set('search', value);
+    } else {
+      next.delete('search');
+    }
+    setSearchParams(next, { replace: true });
+  };
 
   const navLinks = [
     { label: 'Accueil', path: '/' },
@@ -42,10 +53,7 @@ export function Header({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 gap-4">
           {/* Logo */}
-          <button
-            onClick={onLogoClick}
-            className="flex items-center gap-2 shrink-0 group"
-          >
+          <button onClick={onLogoClick} className="flex items-center gap-2 shrink-0 group">
             <img
               src="/assets/images/Kaimono-store-logo.png"
               alt="Kaimono Store Logo"
@@ -60,7 +68,7 @@ export function Header({
               <input
                 type="text"
                 value={searchQuery}
-                onChange={(e) => onSearchChange(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
                 placeholder="Rechercher une figurine, un personnage..."
                 className="w-full bg-gray-100 border border-gray-200 rounded-full pl-10 pr-4 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#EE9D34]/50 focus:ring-1 focus:ring-[#EE9D34]/30 transition-colors"
               />
@@ -131,7 +139,7 @@ export function Header({
               <input
                 type="text"
                 value={searchQuery}
-                onChange={(e) => onSearchChange(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
                 placeholder="Rechercher..."
                 className="w-full bg-gray-100 border border-gray-200 rounded-full pl-10 pr-4 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#EE9D34]/50 focus:ring-1 focus:ring-[#EE9D34]/30 transition-colors"
               />

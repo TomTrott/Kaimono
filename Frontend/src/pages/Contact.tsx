@@ -11,7 +11,10 @@ import {
   CheckCircle2,
   Clock,
   MapPin,
+  ShieldCheck,
+  RefreshCw,
 } from 'lucide-react';
+import api from '@/services/api';
 
 // Raisons de contact
 const CONTACT_REASONS = [
@@ -40,6 +43,19 @@ interface FormErrors {
   orderNumber?: string;
   returnReason?: string;
   message?: string;
+  captcha?: string;
+  global?: string;
+}
+
+// Caractères sans ambiguïté visuelle (pas de 0/O, 1/I/l)
+const CAPTCHA_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+
+function generateCaptcha(length = 5): string {
+  let code = '';
+  for (let i = 0; i < length; i++) {
+    code += CAPTCHA_CHARS[Math.floor(Math.random() * CAPTCHA_CHARS.length)];
+  }
+  return code;
 }
 
 export default function Contact() {
@@ -50,6 +66,8 @@ export default function Contact() {
   const [orderNumber, setOrderNumber] = useState('');
   const [returnReason, setReturnReason] = useState<ReturnReason>('');
   const [message, setMessage] = useState('');
+  const [captcha, setCaptcha] = useState(() => generateCaptcha());
+  const [captchaInput, setCaptchaInput] = useState('');
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -61,6 +79,12 @@ export default function Contact() {
   const showToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 2500);
+  };
+
+  const refreshCaptcha = () => {
+    setCaptcha(generateCaptcha());
+    setCaptchaInput('');
+    setErrors((prev) => ({ ...prev, captcha: undefined }));
   };
 
   const validate = (): boolean => {
@@ -82,20 +106,53 @@ export default function Contact() {
 
     if (!message.trim()) next.message = 'Le message est requis.';
 
+    if (!captchaInput.trim()) {
+      next.captcha = 'Merci de recopier le code affiché.';
+    } else if (captchaInput.trim().toUpperCase() !== captcha.toUpperCase()) {
+      next.captcha = 'Le code saisi est incorrect.';
+    }
+
     setErrors(next);
     return Object.keys(next).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validate()) return;
+    if (!validate()) {
+      // On régénère le captcha si la saisie était incorrecte
+      if (captchaInput.trim().toUpperCase() !== captcha.toUpperCase()) {
+        refreshCaptcha();
+      }
+      return;
+    }
 
     setSubmitting(true);
-    // TODO: Remplacer par ta propre logique d'envoi (API, email, etc.)
-    await new Promise((resolve) => setTimeout(resolve, 900));
-    setSubmitting(false);
-    setSubmitted(true);
-    showToast('Message envoyé avec succès');
+    setErrors((prev) => ({ ...prev, global: undefined }));
+
+    try {
+      await api.post('/contact/send.php', {
+        prenom,
+        nom,
+        email,
+        reason,
+        orderNumber: isRetours ? orderNumber : undefined,
+        returnReason: isRetours ? returnReason : undefined,
+        message,
+      });
+      setSubmitted(true);
+      showToast('Message envoyé avec succès');
+    } catch (err: any) {
+      console.error('Erreur envoi contact :', err);
+      const apiMessage = err?.response?.data?.error;
+      setErrors((prev) => ({
+        ...prev,
+        global: apiMessage || "Une erreur est survenue lors de l'envoi. Réessayez.",
+      }));
+      showToast("Échec de l'envoi du message");
+      refreshCaptcha();
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleReasonChange = (value: ContactReason) => {
@@ -115,6 +172,8 @@ export default function Contact() {
     setOrderNumber('');
     setReturnReason('');
     setMessage('');
+    setCaptchaInput('');
+    setCaptcha(generateCaptcha());
     setErrors({});
     setSubmitted(false);
   };
@@ -219,6 +278,12 @@ export default function Contact() {
               </div>
             ) : (
               <form onSubmit={handleSubmit} noValidate className="space-y-6">
+                {errors.global && (
+                  <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+                    {errors.global}
+                  </div>
+                )}
+
                 {/* Nom / Prénom */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
@@ -395,6 +460,64 @@ export default function Contact() {
                     />
                   </div>
                   {errors.message && <p className="text-xs text-red-500 mt-1">{errors.message}</p>}
+                </div>
+
+                {/* Captcha maison */}
+                <div>
+                  <label htmlFor="captcha" className="block text-xs font-medium text-gray-700 mb-1.5">
+                    Vérification anti-robot
+                  </label>
+                  <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 space-y-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <div
+                        className="select-none flex items-center gap-1 px-4 py-2 rounded-xl bg-white border border-gray-200"
+                        style={{
+                          backgroundImage:
+                            'repeating-linear-gradient(45deg, rgba(0,0,0,0.04) 0px, rgba(0,0,0,0.04) 2px, transparent 2px, transparent 8px)',
+                        }}
+                      >
+                        {captcha.split('').map((char, i) => (
+                          <span
+                            key={i}
+                            className="text-lg font-bold tracking-wider"
+                            style={{
+                              color: i % 2 === 0 ? '#111827' : '#EE9D34',
+                              transform: `rotate(${(i % 2 === 0 ? -1 : 1) * (6 + i * 2)}deg)`,
+                              display: 'inline-block',
+                            }}
+                          >
+                            {char}
+                          </span>
+                        ))}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={refreshCaptcha}
+                        className="p-2 rounded-full border border-gray-200 bg-white hover:bg-gray-100 transition-colors shrink-0"
+                        aria-label="Générer un nouveau code"
+                        title="Générer un nouveau code"
+                      >
+                        <RefreshCw className="w-4 h-4 text-gray-500" />
+                      </button>
+                    </div>
+
+                    <div className="relative">
+                      <ShieldCheck className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                      <input
+                        id="captcha"
+                        type="text"
+                        value={captchaInput}
+                        onChange={(e) => {
+                          setCaptchaInput(e.target.value);
+                          setErrors((prev) => ({ ...prev, captcha: undefined }));
+                        }}
+                        placeholder="Recopiez le code ci-dessus"
+                        autoComplete="off"
+                        className={`${inputBase} ${errors.captcha ? inputErr : inputOk} pl-9 bg-white`}
+                      />
+                    </div>
+                  </div>
+                  {errors.captcha && <p className="text-xs text-red-500 mt-1">{errors.captcha}</p>}
                 </div>
 
                 {/* Submit */}
