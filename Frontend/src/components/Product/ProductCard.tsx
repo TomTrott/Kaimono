@@ -1,4 +1,4 @@
-import { Plus, Check } from 'lucide-react';
+import { Plus, Check, Star } from 'lucide-react';
 import type { Product } from '@/types';
 import { useState } from 'react';
 import { useCart } from '@/context/CartContext';
@@ -36,26 +36,26 @@ export function ProductCard({ product, onProductClick }: ProductCardProps) {
     >
       {/* Bouton "Ajouter au panier" - Toujours visible sur mobile, au survol sur PC */}
       <button
-  onClick={(e) => {
-    e.stopPropagation();
-    handleQuickAdd();
-  }}
-  disabled={product.stock === 0 || adding}
-  className="absolute top-3 right-3 z-10 w-9 h-9 rounded-full
-    bg-[#EE9D34] text-white shadow-md
-    md:bg-white/80 md:border md:border-gray-300 md:text-gray-700
-    md:opacity-0 md:group-hover:opacity-100
-    hover:bg-[#EE9D34] hover:text-white hover:border-[#EE9D34]
-    flex items-center justify-center  {/* <-- Ajout de ces classes */}
-    transition-all backdrop-blur-sm disabled:opacity-50"
-  aria-label={added ? "Ajouté au panier" : "Ajouter au panier"}
->
-  {added ? (
-    <Check className="w-4 h-4" />
-  ) : (
-    <Plus className="w-4 h-4" />
-  )}
-</button>
+        onClick={(e) => {
+          e.stopPropagation();
+          handleQuickAdd();
+        }}
+        disabled={product.stock === 0 || adding}
+        className="absolute top-3 right-3 z-10 w-9 h-9 rounded-full
+          bg-[#EE9D34] text-white shadow-md
+          md:bg-white/80 md:border md:border-gray-300 md:text-gray-700
+          md:opacity-0 md:group-hover:opacity-100
+          hover:bg-[#EE9D34] hover:text-white hover:border-[#EE9D34]
+          flex items-center justify-center
+          transition-all backdrop-blur-sm disabled:opacity-50"
+        aria-label={added ? "Ajouté au panier" : "Ajouter au panier"}
+      >
+        {added ? (
+          <Check className="w-4 h-4" />
+        ) : (
+          <Plus className="w-4 h-4" />
+        )}
+      </button>
 
       {/* Image du produit */}
       <div className="relative aspect-[4/5] overflow-hidden bg-gray-50">
@@ -100,6 +100,25 @@ export function ProductCard({ product, onProductClick }: ProductCardProps) {
         <h3 className="text-gray-900 font-semibold text-sm leading-snug mb-2 line-clamp-2 group-hover:text-[#EE9D34] transition-colors">
           {product.name}
         </h3>
+
+        {/* Note et nombre d'avis */}
+        <div className="flex items-center gap-1.5 mb-2">
+          <div className="flex items-center gap-0.5">
+            {[1, 2, 3, 4, 5].map((n) => (
+              <Star
+                key={n}
+                className={`w-3.5 h-3.5 ${
+                  n <= Math.round(product.rating)
+                    ? 'fill-amber-400 text-amber-400'
+                    : 'text-gray-300'
+                }`}
+              />
+            ))}
+          </div>
+          <span className="text-xs text-gray-500">
+            ({product.reviews_count ?? 0})
+          </span>
+        </div>
 
         <div className="flex items-end justify-between">
           <div>

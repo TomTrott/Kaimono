@@ -12,6 +12,7 @@ import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 import { Checkout } from '@/components/Checkout/Checkout';
 import { useState } from 'react';
+import ProductReviewsPage from '@/pages/ProductReviewsPage';
 
 export default function App() {
   const [cartOpen, setCartOpen] = useState(false);
@@ -33,6 +34,7 @@ export default function App() {
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
+                <Route path="/produits/:id/avis" element={<ProductReviewsPage />} />
                 <Route
                   path="/checkout"
                   element={

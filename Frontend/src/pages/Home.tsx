@@ -25,7 +25,8 @@ export default function Home() {
     setError(null);
     try {
       const res = await api.get('/products/list.php');
-      setProducts(res.data.products);
+      const data = res?.data?.products;
+      setProducts(Array.isArray(data) ? data : []);
     } catch (err) {
       setError('Impossible de charger les produits. Veuillez réessayer.');
       console.error('Erreur lors de la récupération des produits :', err);
@@ -51,7 +52,7 @@ export default function Home() {
 
   // Filtrer les 6 derniers produits ajoutés (tri par created_at)
   // Nouveautés : produits marqués comme "is_new" côté admin, les plus récents en premier
-  const latestProducts = products
+  const latestProducts = (products ?? [])
     .filter((p) => !!p.is_new)
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     .slice(0, 6);

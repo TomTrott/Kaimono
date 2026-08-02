@@ -2,7 +2,7 @@ import { Star, Plus, Minus, ArrowLeft, Check, X, ChevronLeft, ChevronRight } fro
 import type { Product } from '@/types';
 import { useState, useEffect, useRef } from 'react';
 import { useCart } from '@/context/CartContext';
-
+import { useNavigate } from 'react-router-dom';
 interface ProductDetailProps {
   product: Product;
   onBack: () => void;
@@ -14,7 +14,7 @@ function formatPrice(price: number): string {
 
 export function ProductDetail({ product, onBack }: ProductDetailProps) {
   const { addToCart } = useCart();
-
+const navigate = useNavigate();
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
   const [adding, setAdding] = useState(false);
@@ -206,23 +206,26 @@ export function ProductDetail({ product, onBack }: ProductDetailProps) {
               {product.name}
             </h1>
 
-            <div className="flex items-center gap-2 mb-6">
-              <div className="flex items-center gap-0.5">
-                {[1, 2, 3, 4, 5].map((n) => (
-                  <Star
-                    key={n}
-                    className={`w-4 h-4 ${
-                      n <= Math.round(product.rating)
-                        ? 'fill-amber-400 text-amber-400'
-                        : 'text-gray-300'
-                    }`}
-                  />
-                ))}
-              </div>
-              <span className="text-sm text-gray-500">
-                {product.rating.toFixed(1)} ({product.reviews_count} avis)
-              </span>
-            </div>
+            <button
+  onClick={() => navigate(`/produits/${product.id}/avis`)}
+  className="flex items-center gap-2 mb-6 hover:opacity-80 transition-opacity cursor-pointer"
+>
+  <div className="flex items-center gap-0.5">
+    {[1, 2, 3, 4, 5].map((n) => (
+      <Star
+        key={n}
+        className={`w-4 h-4 ${
+          n <= Math.round(product.rating)
+            ? 'fill-amber-400 text-amber-400'
+            : 'text-gray-300'
+        }`}
+      />
+    ))}
+  </div>
+  <span className="text-sm text-gray-500 underline decoration-dotted">
+    {product.rating.toFixed(1)} ({product.reviews_count} avis)
+  </span>
+</button>
 
             <div className="flex items-baseline gap-3 mb-6">
               <span className="text-3xl font-bold text-gray-900">

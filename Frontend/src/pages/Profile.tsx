@@ -21,10 +21,11 @@ import {
   XCircle,
   Clock,
   Download,
+  Star,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/services/api';
-import type { OrderSummary, OrderDetail, OrderDetailItem, OrderStatus } from '@/types';
+import type { OrderSummary, OrderDetail, OrderDetailItem, OrderStatus, ReviewedProduct, ReviewableProduct } from '@/types';
 
 // Définition des statuts avec des icônes et des styles
 const statusIcons: Record<OrderStatus, { icon: React.ReactNode; label: string; className: string }> = {
@@ -37,7 +38,7 @@ const statusIcons: Record<OrderStatus, { icon: React.ReactNode; label: string; c
 
 export default function Profile() {
   const { isAuthenticated, loading } = useAuth();
-  const [tab, setTab] = useState<'infos' | 'orders'>('infos');
+  const [tab, setTab] = useState<'infos' | 'orders' | 'reviews'>('infos');
 
   if (loading) {
     return (
@@ -63,9 +64,12 @@ export default function Profile() {
           <TabButton active={tab === 'orders'} onClick={() => setTab('orders')} icon={<Package className="w-4 h-4" />}>
             Mes commandes
           </TabButton>
+          <TabButton active={tab === 'reviews'} onClick={() => setTab('reviews')} icon={<Star className="w-4 h-4" />}>
+            Mes avis
+          </TabButton>
         </div>
 
-        {tab === 'infos' ? <InfoTab /> : <OrdersTab />}
+        {tab === 'infos' ? <InfoTab /> : tab === 'orders' ? <OrdersTab /> : <ReviewsTab />}
       </div>
     </div>
   );
@@ -92,6 +96,40 @@ function TabButton({
       {icon}
       {children}
     </button>
+  );
+}
+
+// ---------- Étoiles ----------
+function StarRating({
+  value,
+  onChange,
+  readOnly = false,
+  size = 'w-5 h-5',
+}: {
+  value: number;
+  onChange?: (v: number) => void;
+  readOnly?: boolean;
+  size?: string;
+}) {
+  const [hover, setHover] = useState<number | null>(null);
+  const display = hover ?? value;
+
+  return (
+    <div className="flex items-center gap-1">
+      {[1, 2, 3, 4, 5].map((n) => (
+        <button
+          key={n}
+          type="button"
+          disabled={readOnly}
+          onClick={() => onChange?.(n)}
+          onMouseEnter={() => !readOnly && setHover(n)}
+          onMouseLeave={() => !readOnly && setHover(null)}
+          className={readOnly ? 'cursor-default' : 'cursor-pointer'}
+        >
+          <Star className={`${size} ${n <= display ? 'fill-[#EE9D34] text-[#EE9D34]' : 'text-gray-300'}`} />
+        </button>
+      ))}
+    </div>
   );
 }
 
@@ -276,7 +314,6 @@ function OrdersTab() {
   };
 
   const handleDownloadInvoice = (orderId: string) => {
-    // Fonction à implémenter plus tard pour télécharger la facture
     console.log(`Téléchargement de la facture pour la commande : ${orderId}`);
     alert(`Téléchargement de la facture pour la commande ${orderId} (à implémenter).`);
   };
@@ -310,7 +347,6 @@ function OrdersTab() {
         const status = statusIcons[order.status];
         const detail = details[order.id];
 
-        // Formatage de la date
         const formattedDate = new Date(order.created_at).toLocaleDateString('fr-FR', {
           day: 'numeric',
           month: 'long',
@@ -322,7 +358,6 @@ function OrdersTab() {
             key={order.id}
             className="rounded-3xl border border-gray-200 bg-white shadow-sm shadow-gray-100 overflow-hidden"
           >
-            {/* En-tête de la commande */}
             <button
               onClick={() => toggleOrder(order.id)}
               className="w-full flex items-center justify-between p-5 sm:p-6 text-left"
@@ -347,7 +382,6 @@ function OrdersTab() {
               </div>
             </button>
 
-            {/* Détails de la commande */}
             {isOpen && (
               <div className="border-t border-gray-100 p-5 sm:p-6 space-y-6">
                 {loadingDetail === order.id || !detail ? (
@@ -357,7 +391,6 @@ function OrdersTab() {
                   </div>
                 ) : (
                   <>
-                    {/* Section : Informations de livraison */}
                     <div className="rounded-2xl bg-gray-50 p-4">
                       <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
                         <MapPin className="w-4 h-4 text-gray-500" />
@@ -368,7 +401,6 @@ function OrdersTab() {
                       </p>
                     </div>
 
-                    {/* Section : Articles de la commande */}
                     <div className="rounded-2xl bg-gray-50 p-4">
                       <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
                         <Package className="w-4 h-4 text-gray-500" />
@@ -396,7 +428,6 @@ function OrdersTab() {
                       </div>
                     </div>
 
-                    {/* Section : Récapitulatif */}
                     <div className="rounded-2xl bg-gray-50 p-4">
                       <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
                         <Euro className="w-4 h-4 text-gray-500" />
@@ -420,7 +451,6 @@ function OrdersTab() {
                       </div>
                     </div>
 
-                    {/* Bouton pour télécharger la facture */}
                     <div className="flex justify-end">
                       <button
                         onClick={() => handleDownloadInvoice(order.id)}
@@ -437,6 +467,245 @@ function OrdersTab() {
           </div>
         );
       })}
+    </div>
+  );
+}
+
+// ---------- Onglet Avis ----------
+function ReviewsTab() {
+  const [reviewed, setReviewed] = useState<ReviewedProduct[] | null>(null);
+  const [reviewable, setReviewable] = useState<ReviewableProduct[] | null>(null);
+  const [error, setError] = useState('');
+  const [openForm, setOpenForm] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [formState, setFormState] = useState<{ rating: number; comment: string }>({ rating: 5, comment: '' });
+  const [submitting, setSubmitting] = useState(false);
+
+  const load = () => {
+  api
+    .get('/reviews/my.php')
+    .then((res) => {
+      setReviewed(Array.isArray(res.data?.reviewed) ? res.data.reviewed : []);
+      setReviewable(Array.isArray(res.data?.reviewable) ? res.data.reviewable : []);
+    })
+    .catch(() => setError('Impossible de charger vos avis.'));
+};
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  const startReview = (productId: string) => {
+    setOpenForm(productId);
+    setEditingId(null);
+    setFormState({ rating: 5, comment: '' });
+  };
+
+  const startEdit = (review: ReviewedProduct) => {
+    setEditingId(review.id);
+    setOpenForm(null);
+    setFormState({ rating: review.rating, comment: review.comment ?? '' });
+  };
+
+  const cancelForm = () => {
+    setOpenForm(null);
+    setEditingId(null);
+  };
+
+  const submitNew = async (item: ReviewableProduct) => {
+    setSubmitting(true);
+    setError('');
+    try {
+      await api.post('/reviews/create.php', {
+        product_id: item.product_id,
+        order_id: item.order_id,
+        rating: formState.rating,
+        comment: formState.comment,
+      });
+      setOpenForm(null);
+      load();
+    } catch (err) {
+      const apiMessage = axios.isAxiosError(err) ? err.response?.data?.error : undefined;
+      setError(apiMessage || "Impossible d'enregistrer votre avis.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const submitEdit = async (reviewId: string) => {
+    setSubmitting(true);
+    setError('');
+    try {
+      await api.put('/reviews/update.php', {
+        id: reviewId,
+        rating: formState.rating,
+        comment: formState.comment,
+      });
+      setEditingId(null);
+      load();
+    } catch (err) {
+      const apiMessage = axios.isAxiosError(err) ? err.response?.data?.error : undefined;
+      setError(apiMessage || "Impossible de modifier votre avis.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (reviewed === null || reviewable === null) {
+    return (
+      <div className="flex items-center gap-2 text-sm text-gray-400 py-12 justify-center">
+        <Loader2 className="w-4 h-4 animate-spin" />
+        Chargement de vos avis...
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-8">
+      {error && (
+        <div className="rounded-2xl bg-red-50 border border-red-200 px-4 py-2.5 text-xs text-red-600">
+          {error}
+        </div>
+      )}
+
+      {reviewable.length > 0 && (
+        <div>
+          <h2 className="text-sm font-semibold text-gray-900 mb-3">Produits à noter</h2>
+          <div className="space-y-3">
+            {reviewable.map((item) => (
+              <div key={item.product_id} className="rounded-3xl border border-gray-200 bg-white shadow-sm shadow-gray-100 p-5">
+                <div className="flex items-center gap-4">
+                  <img
+                    src={item.product_image_url ?? '/placeholder.png'}
+                    alt={item.product_name}
+                    className="w-14 h-14 rounded-xl object-cover bg-gray-100 flex-shrink-0"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">{item.product_name}</p>
+                    <p className="text-xs text-gray-400">
+                      Commandé le {new Date(item.ordered_at).toLocaleDateString('fr-FR')}
+                    </p>
+                  </div>
+                  {openForm !== item.product_id && (
+                    <button
+                      onClick={() => startReview(item.product_id)}
+                      className="px-4 py-2 rounded-full bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 transition-colors flex-shrink-0"
+                    >
+                      Donner mon avis
+                    </button>
+                  )}
+                </div>
+
+                {openForm === item.product_id && (
+                  <div className="mt-4 pt-4 border-t border-gray-100 space-y-3">
+                    <StarRating
+                      value={formState.rating}
+                      onChange={(v) => setFormState((f) => ({ ...f, rating: v }))}
+                    />
+                    <textarea
+                      value={formState.comment}
+                      onChange={(e) => setFormState((f) => ({ ...f, comment: e.target.value }))}
+                      placeholder="Votre avis (facultatif)"
+                      rows={3}
+                      className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:border-[#EE9D34]/50 focus:ring-[#EE9D34]/30 transition-colors resize-none"
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => submitNew(item)}
+                        disabled={submitting}
+                        className="flex items-center gap-1.5 px-5 py-2 rounded-full bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 disabled:opacity-60 transition-colors"
+                      >
+                        {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                        Publier
+                      </button>
+                      <button
+                        onClick={cancelForm}
+                        disabled={submitting}
+                        className="flex items-center gap-1.5 px-5 py-2 rounded-full border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50 transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                        Annuler
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div>
+        <h2 className="text-sm font-semibold text-gray-900 mb-3">Mes avis</h2>
+        {reviewed.length === 0 ? (
+          <div className="text-center py-16 rounded-3xl border border-dashed border-gray-200">
+            <Star className="w-8 h-8 text-gray-300 mx-auto mb-3" />
+            <p className="text-sm text-gray-500">Vous n'avez pas encore publié d'avis.</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {reviewed.map((review) => (
+              <div key={review.id} className="rounded-3xl border border-gray-200 bg-white shadow-sm shadow-gray-100 p-5">
+                <div className="flex items-center gap-4">
+                  <img
+                    src={review.image_url ?? '/placeholder.png'}
+                    alt={review.product_name}
+                    className="w-14 h-14 rounded-xl object-cover bg-gray-100 flex-shrink-0"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">{review.product_name}</p>
+                    <StarRating value={review.rating} readOnly size="w-4 h-4" />
+                  </div>
+                  {editingId !== review.id && (
+                    <button
+                      onClick={() => startEdit(review)}
+                      className="flex items-center gap-1.5 text-sm font-medium text-[#EE9D34] hover:underline flex-shrink-0"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                      Modifier
+                    </button>
+                  )}
+                </div>
+
+                {editingId === review.id ? (
+                  <div className="mt-4 pt-4 border-t border-gray-100 space-y-3">
+                    <StarRating
+                      value={formState.rating}
+                      onChange={(v) => setFormState((f) => ({ ...f, rating: v }))}
+                    />
+                    <textarea
+                      value={formState.comment}
+                      onChange={(e) => setFormState((f) => ({ ...f, comment: e.target.value }))}
+                      rows={3}
+                      className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:border-[#EE9D34]/50 focus:ring-[#EE9D34]/30 transition-colors resize-none"
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => submitEdit(review.id)}
+                        disabled={submitting}
+                        className="flex items-center gap-1.5 px-5 py-2 rounded-full bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 disabled:opacity-60 transition-colors"
+                      >
+                        {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                        Enregistrer
+                      </button>
+                      <button
+                        onClick={cancelForm}
+                        disabled={submitting}
+                        className="flex items-center gap-1.5 px-5 py-2 rounded-full border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50 transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                        Annuler
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  review.comment && <p className="text-sm text-gray-600 mt-3">{review.comment}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
