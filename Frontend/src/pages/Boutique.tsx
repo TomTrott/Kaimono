@@ -91,7 +91,9 @@ export default function Boutique() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const displayedProducts = products;
+  const displayedProducts = [...products].sort(
+    (a, b) => (b.is_featured ? 1 : 0) - (a.is_featured ? 1 : 0)
+  );
 
   return (
     <div className="min-h-[calc(80vh-4rem)] bg-gray-50">

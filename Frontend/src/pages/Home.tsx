@@ -50,7 +50,9 @@ export default function Home() {
   };
 
   // Filtrer les 6 derniers produits ajoutés (tri par created_at)
-  const latestProducts = [...products]
+  // Nouveautés : produits marqués comme "is_new" côté admin, les plus récents en premier
+  const latestProducts = products
+    .filter((p) => !!p.is_new)
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     .slice(0, 6);
 
